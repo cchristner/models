@@ -5,8 +5,8 @@ def process_excel(file_path, rows_to_select):
     # Read the entire Excel sheet
     df = pd.read_excel(file_path, sheet_name="model", header=None)
 
-    # Identify columns with 'x' in row 1 (index 0)
-    x_columns = df.iloc[0] == 'x'
+    # Identify columns with 'q' and 'k' in row 1 (index 0)
+    x_columns = df.iloc[0].isin(['q', 'k'])
     x_columns[0] = True  # Always include the first column (A)
 
     # Filter the DataFrame to keep only the columns with 'x' and column A
@@ -40,8 +40,15 @@ cnh_file_path = os.path.join(base_path, "CNH", "CNH.xlsx")
 cnh_rows = [1, 2, 24, 28, 30]  # Rows 2, 3, 25, 29, and 31
 cnh_df = process_excel(cnh_file_path, cnh_rows)
 
+# Process AGCO data
+agco_file_path = os.path.join(base_path, "AGCO", "AGCO.xlsx")
+agco_rows = [1, 31, 33, 35]  # Rows 2, 32, 34, 36
+agco_df = process_excel(agco_file_path, agco_rows)
+
 # Print the results
 print("DE Data:")
 print(de_df)
 print("\nCNH Data:")
 print(cnh_df)
+print("\nAGCO Data:")
+print(agco_df)
