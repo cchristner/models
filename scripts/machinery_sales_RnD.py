@@ -45,6 +45,11 @@ agco_file_path = os.path.join(base_path, "AGCO", "AGCO.xlsx")
 agco_rows = [1, 31, 33, 35]  # Rows 2, 32, 34, 36
 agco_df = process_excel(agco_file_path, agco_rows)
 
+# Process TITN data
+titn_file_path = os.path.join(base_path, "TITN", "TITN.xlsx")
+titn_rows = [1, 13, 18, 23, 23, 43, 53]  # Rows 2, 14, 19, 24, 44, 54
+titn_df = process_excel(titn_file_path, titn_rows)
+
 # Print the results
 print("DE Data:")
 print(de_df)
@@ -52,3 +57,5 @@ print("\nCNH Data:")
 print(cnh_df)
 print("\nAGCO Data:")
 print(agco_df)
+print("\nTITN Data:")
+print(titn_df)
