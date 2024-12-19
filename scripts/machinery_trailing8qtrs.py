@@ -1,18 +1,47 @@
 import pandas as pd
 import os
-import openpyxl
 
-# Define the base path
-base_path = "C:/users/corey/onedrive/models"
+def process_excel(file_path, rows_to_select):
+    # Read the entire Excel sheet
+    df = pd.read_excel(file_path, sheet_name="model", header=None)
 
-# Define the path to the DE.xlsx file
+    # Identify columns with 'x' in row 1 (index 0)
+    x_columns = df.iloc[0] == 'x'
+    x_columns[0] = True  # Always include the first column (A)
+
+    # Filter the DataFrame to keep only the columns with 'x' and column A
+    df_filtered = df.loc[:, x_columns]
+
+    # Select the desired rows
+    selected_rows = df_filtered.iloc[rows_to_select]
+
+    # Transpose the DataFrame
+    df_transposed = selected_rows.T
+
+    # Use row 3 (index 0 after transposition) as column names
+    df_final = df_transposed.iloc[1:]  # Exclude the first row (now used as column names)
+    df_final.columns = df_transposed.iloc[0]
+
+    # Reset the index
+    df_final.reset_index(drop=True, inplace=True)
+
+    return df_final
+
+# Set up the base path
+base_path = r"C:\Users\corey\OneDrive\models"
+
+# Process DE data
 de_file_path = os.path.join(base_path, "DE", "DE.xlsx")
+de_rows = [2, 10, 31, 36, 37]  # Rows 3, 11, 32, 37, and 38
+de_df = process_excel(de_file_path, de_rows)
 
-# Read the "Scripting" sheet from the DE.xlsx file
-df_de = pd.read_excel(de_file_path, sheet_name="Scripting", engine='openpyxl')
+# Process CNH data
+cnh_file_path = os.path.join(base_path, "CNH", "CNH.xlsx")
+cnh_rows = [1, 2, 24, 28, 30]  # Rows 2, 3, 25, 29, and 31
+cnh_df = process_excel(cnh_file_path, cnh_rows)
 
-# Transpose the DataFrame
-df_de_transposed = df_de.transpose()
-
-# Print the transposed DataFrame to the console
-print(df_de_transposed)
+# Print the results
+print("DE Data:")
+print(de_df)
+print("\nCNH Data:")
+print(cnh_df)
