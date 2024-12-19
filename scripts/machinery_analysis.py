@@ -35,40 +35,52 @@ def analyze_column(df, column_label):
     percent_up = ((highest_value - baseline) / baseline) * 100
     percent_down = ((drop_back_value - highest_value) / highest_value) * 100
 
-    return f"Baseline: {baseline:.2f}\n" \
-           f"Highest Value: {highest_value:.2f}\n" \
-           f"Dropped Back To: {drop_back_value:.2f}\n" \
-           f"Percent Up: {percent_up:.2f}%\n" \
-           f"Percent Down: {percent_down:.2f}%"
+    return {
+        "Baseline": baseline,
+        "Highest Value": highest_value,
+        "Dropped Back To": drop_back_value,
+        "Percent Up": percent_up,
+        "Percent Down": percent_down
+    }
 
 # Set up the base path
 base_path = r"C:\Users\corey\OneDrive\models"
+output_file_path = os.path.join(base_path, "analysis_results.xlsx")
 
-# Process DE data
-de_file_path = os.path.join(base_path, "DE", "DE.xlsx")
-de_rows = [2, 10, 31, 36, 37]  # Rows 3, 11, 32, 37, and 38
-de_df = process_excel(de_file_path, de_rows)
+# Create a Pandas Excel writer using XlsxWriter as the engine.
+with pd.ExcelWriter(output_file_path, engine='xlsxwriter') as writer:
+    
+    # Process DE data
+    de_file_path = os.path.join(base_path, "DE", "DE.xlsx")
+    de_rows = [2, 10, 31, 36, 37]  # Rows 3, 11, 32, 37, and 38
+    de_df = process_excel(de_file_path, de_rows)
+    
+    # Analyze R&D column for DE DataFrame
+    de_analysis = analyze_column(de_df, "RnD")
+    
+    # Write DE analysis results to Excel
+    pd.DataFrame(de_analysis, index=[0]).to_excel(writer, sheet_name='DE Analysis', index=False)
 
-# Process CNH data
-cnh_file_path = os.path.join(base_path, "CNH", "CNH.xlsx")
-cnh_rows = [2, 24, 28, 30]  # Rows 3, 25, 29, and 31
-cnh_df = process_excel(cnh_file_path, cnh_rows)
+    # Process CNH data
+    cnh_file_path = os.path.join(base_path, "CNH", "CNH.xlsx")
+    cnh_rows = [2, 24, 28, 30]  # Rows 3, 25, 29, and 31
+    cnh_df = process_excel(cnh_file_path, cnh_rows)
+    
+    # Analyze R&D column for CNH DataFrame
+    cnh_analysis = analyze_column(cnh_df, "RnD")
+    
+    # Write CNH analysis results to Excel
+    pd.DataFrame(cnh_analysis, index=[0]).to_excel(writer, sheet_name='CNH Analysis', index=False)
 
-# Process AGCO data
-agco_file_path = os.path.join(base_path, "AGCO", "AGCO.xlsx")
-agco_rows = [1, 31, 33, 35]  # Rows 2, 32, 34, 36
-agco_df = process_excel(agco_file_path, agco_rows)
+    # Process AGCO data
+    agco_file_path = os.path.join(base_path, "AGCO", "AGCO.xlsx")
+    agco_rows = [1, 31, 33, 35]  # Rows 2, 32, 34, 36
+    agco_df = process_excel(agco_file_path, agco_rows)
+    
+    # Analyze R&D column for AGCO DataFrame
+    agco_analysis = analyze_column(agco_df, "RnD")
+    
+    # Write AGCO analysis results to Excel
+    pd.DataFrame(agco_analysis, index=[0]).to_excel(writer, sheet_name='AGCO Analysis', index=False)
 
-# Analyze R&D column for each DataFrame
-print("DE Analysis:")
-de_analysis = analyze_column(de_df, "RnD")
-print(de_analysis)
-
-print("\nCNH Analysis:")
-cnh_analysis = analyze_column(cnh_df, "RnD")
-print(cnh_analysis)
-
-print("\nAGCO Analysis:")
-agco_analysis = analyze_column(agco_df, "RnD")
-print(agco_analysis)
-
+print(f"Analysis results have been written to {output_file_path}")
