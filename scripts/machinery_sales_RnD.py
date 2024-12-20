@@ -1,61 +1,148 @@
 import pandas as pd
 import os
+from typing import List, Dict
 
-def process_excel(file_path, rows_to_select):
-    # Read the entire Excel sheet
-    df = pd.read_excel(file_path, sheet_name="model", header=None)
+# Configuration dictionary for company data
+COMPANY_CONFIG = {
+    'DE': {
+        'folder': 'DE',
+        'file': 'DE.xlsx',
+        'rows': [2, 10, 31, 36, 37]  # Rows 3, 11, 32, 37, and 38
+    },
+    'CNH': {
+        'folder': 'CNH',
+        'file': 'CNH.xlsx',
+        'rows': [1, 2, 24, 28, 30]  # Rows 2, 3, 25, 29, and 31
+    },
+    'AGCO': {
+        'folder': 'AGCO',
+        'file': 'AGCO.xlsx',
+        'rows': [1, 31, 33, 35]  # Rows 2, 32, 34, 36
+    },
+    'TITN': {
+        'folder': 'TITN',
+        'file': 'TITN.xlsx',
+        'rows': [1, 13, 18, 23, 23, 43, 53]  # Rows 2, 14, 19, 24, 44, 54
+    }
+}
 
-    # Identify columns with 'q' and 'k' in row 1 (index 0)
-    x_columns = df.iloc[0].isin(['q', 'k'])
-    x_columns[0] = True  # Always include the first column (A)
+def process_excel(file_path: str, rows_to_select: List[int]) -> pd.DataFrame:
+    """
+    Process an Excel file by selecting specific rows and columns.
+    
+    Args:
+        file_path (str): Path to the Excel file
+        rows_to_select (List[int]): List of row indices to select
+        
+    Returns:
+        pd.DataFrame: Processed DataFrame
+    """
+    try:
+        # Read the Excel sheet
+        df = pd.read_excel(file_path, sheet_name="model", header=None)
+        
+        # Identify columns with 'q' and 'k' in row 1 (index 0)
+        x_columns = df.iloc[0].isin(['q', 'k'])
+        x_columns[0] = True  # Always include the first column (A)
+        
+        # Filter and process the DataFrame
+        df_filtered = df.loc[:, x_columns]
+        selected_rows = df_filtered.iloc[rows_to_select]
+        df_transposed = selected_rows.T
+        
+        # Format the final DataFrame
+        df_final = df_transposed.iloc[1:]
+        df_final.columns = df_transposed.iloc[0]
+        df_final.reset_index(drop=True, inplace=True)
+        
+        return df_final
+    
+    except Exception as e:
+        print(f"Error processing {file_path}: {str(e)}")
+        raise
 
-    # Filter the DataFrame to keep only the columns with 'x' and column A
-    df_filtered = df.loc[:, x_columns]
+def process_all_companies(base_path: str) -> Dict[str, pd.DataFrame]:
+    """
+    Process Excel files for all companies.
+    
+    Args:
+        base_path (str): Base path for all company folders
+        
+    Returns:
+        Dict[str, pd.DataFrame]: Dictionary of processed DataFrames for each company
+    """
+    company_data = {}
+    
+    for company, config in COMPANY_CONFIG.items():
+        try:
+            file_path = os.path.join(base_path, config['folder'], config['file'])
+            company_data[company] = process_excel(file_path, config['rows'])
+        except Exception as e:
+            print(f"Error processing {company} data: {str(e)}")
+            continue
+    
+    return company_data
 
-    # Select the desired rows
-    selected_rows = df_filtered.iloc[rows_to_select]
+def write_to_excel(company_data: Dict[str, pd.DataFrame], output_path: str) -> None:
+    """
+    Write processed data to Excel file with company names as headers.
+    
+    Args:
+        company_data (Dict[str, pd.DataFrame]): Dictionary of processed DataFrames
+        output_path (str): Path for output Excel file
+    """
+    try:
+        with pd.ExcelWriter(output_path) as writer:
+            current_row = 0
+            
+            for company, df in company_data.items():
+                # Write company name
+                pd.DataFrame([company]).to_excel(
+                    writer,
+                    sheet_name='Sheet1',
+                    startrow=current_row,
+                    index=False,
+                    header=False
+                )
+                
+                # Write company data
+                df.to_excel(
+                    writer,
+                    sheet_name='Sheet1',
+                    startrow=current_row + 1,
+                    index=False
+                )
+                
+                # Update row counter for next company
+                current_row += len(df) + 3  # +3 for spacing and company name
+                
+        print(f"Data successfully saved to {output_path}")
+        
+    except Exception as e:
+        print(f"Error writing to Excel: {str(e)}")
+        raise
 
-    # Transpose the DataFrame
-    df_transposed = selected_rows.T
+def main():
+    """Main function to run the Excel processing pipeline."""
+    try:
+        # Set up the base path
+        base_path = r"C:\Users\corey\OneDrive\models"
+        output_file = os.path.join(base_path, "scratch_work", "machinery_trailing8qtrs.xlsx")
+        
+        # Process all company data
+        company_data = process_all_companies(base_path)
+        
+        # Print results
+        for company, df in company_data.items():
+            print(f"\n{company} Data:")
+            print(df)
+        
+        # Write results to Excel
+        write_to_excel(company_data, output_file)
+        
+    except Exception as e:
+        print(f"Error in main execution: {str(e)}")
+        raise
 
-    # Use row 3 (index 0 after transposition) as column names
-    df_final = df_transposed.iloc[1:]  # Exclude the first row (now used as column names)
-    df_final.columns = df_transposed.iloc[0]
-
-    # Reset the index
-    df_final.reset_index(drop=True, inplace=True)
-
-    return df_final
-
-# Set up the base path
-base_path = r"C:\Users\corey\OneDrive\models"
-
-# Process DE data
-de_file_path = os.path.join(base_path, "DE", "DE.xlsx")
-de_rows = [2, 10, 31, 36, 37]  # Rows 3, 11, 32, 37, and 38
-de_df = process_excel(de_file_path, de_rows)
-
-# Process CNH data
-cnh_file_path = os.path.join(base_path, "CNH", "CNH.xlsx")
-cnh_rows = [1, 2, 24, 28, 30]  # Rows 2, 3, 25, 29, and 31
-cnh_df = process_excel(cnh_file_path, cnh_rows)
-
-# Process AGCO data
-agco_file_path = os.path.join(base_path, "AGCO", "AGCO.xlsx")
-agco_rows = [1, 31, 33, 35]  # Rows 2, 32, 34, 36
-agco_df = process_excel(agco_file_path, agco_rows)
-
-# Process TITN data
-titn_file_path = os.path.join(base_path, "TITN", "TITN.xlsx")
-titn_rows = [1, 13, 18, 23, 23, 43, 53]  # Rows 2, 14, 19, 24, 44, 54
-titn_df = process_excel(titn_file_path, titn_rows)
-
-# Print the results
-print("DE Data:")
-print(de_df)
-print("\nCNH Data:")
-print(cnh_df)
-print("\nAGCO Data:")
-print(agco_df)
-print("\nTITN Data:")
-print(titn_df)
+if __name__ == "__main__":
+    main()
