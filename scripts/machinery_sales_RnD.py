@@ -127,7 +127,7 @@ def main():
     try:
         # Set up the base path
         base_path = r"C:\Users\corey\OneDrive\models"
-        output_file = os.path.join(base_path, "scratch_work", "machinery_trailing8qtrs.xlsx")
+        output_file = os.path.join(base_path, "scratch_work", "machinerydata.xlsx")
         
         # Process all company data
         company_data = process_all_companies(base_path)
