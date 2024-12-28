@@ -17,7 +17,7 @@ COMPANY_CONFIG = {
     'AGCO': {
         'folder': 'AGCO',
         'file': 'AGCO.xlsx',
-        'rows': [1, 31, 33, 35]  # Rows 2, 32, 34, 36
+        'rows': [1, 30, 32, 34]  # Rows 2, 31, 35, 37
     },
     'TITN': {
         'folder': 'TITN',
