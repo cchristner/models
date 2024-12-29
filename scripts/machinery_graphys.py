@@ -56,7 +56,7 @@ plt.xticks(rotation=45)
 plt.tight_layout()
 
 # Save the plot
-output_path = os.path.join(script_dir, 'rnd_qoq_changes.png')
+output_path = os.path.join(parent_dir, 'scratch_work', 'rnd_qoq_changes.png')
 plt.savefig(output_path)
 plt.close()
 
